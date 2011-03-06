@@ -1,7 +1,6 @@
 package delta.tools.mysqladmin;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -14,12 +13,6 @@ import java.util.List;
  */
 public class MySqlAdmin
 {
-  private static final String MYSQL_DRIVER="com.mysql.jdbc.Driver";
-  private static final String MYSQL_JDBC_URL_TEMPLATE="jdbc:mysql://${HOST_NAME}:3306/${DB_NAME}";
-  private static final String MYSQL_ROOT_USER="root";
-  private static final String MYSQL_ADMIN_DB="mysql";
-  private static final String DEFAULT_HOST="localhost";
-
   /**
    * Test method.
    */
@@ -28,7 +21,8 @@ public class MySqlAdmin
     String hostname=null;
     String password=null;
     String dbName="toto";
-    boolean ok=checkServer(hostname,password);
+    MySqlServer server=new MySqlServer(hostname);
+    boolean ok=server.checkServer(password);
     System.out.println("Server : "+ok);
     if (ok)
     {
@@ -38,29 +32,6 @@ public class MySqlAdmin
       System.out.println(databases);
       dropDatabase(c,dbName);
     }
-  }
-
-  /**
-   * Check the connection to a MySQL server.
-   * @param hostName Targeted host.
-   * @param rootPassword Root password.
-   * @return <code>true</code> if connection is successfull, <code>false</code> otherwise.
-   */
-  public boolean checkServer(String hostName, String rootPassword)
-  {
-    boolean ok;
-    try
-    {
-      Connection c=buildRootConnection(hostName, rootPassword);
-      ok=true;
-      closeConnection(c);
-    }
-    catch(Exception e)
-    {
-      ok=false;
-      e.printStackTrace();
-    }
-    return ok;
   }
 
   /**
@@ -161,40 +132,9 @@ public class MySqlAdmin
 
   private Connection buildRootConnection(String hostName,String password) throws Exception
   {
-    Connection c=buildConnection(hostName,MYSQL_ADMIN_DB,MYSQL_ROOT_USER,password);
+    MySqlTargetDbInfo target=MySqlTargetDbInfo.newRootServerDbInfo(hostName,password);
+    Connection c=MySqlTools.openConnection(target);
     return c;
-  }
-
-  private Connection buildConnection(String hostName, String dbName, String user, String password) throws Exception
-  {
-    Class.forName(MYSQL_DRIVER);
-    String url=MYSQL_JDBC_URL_TEMPLATE;
-    if ((hostName==null) || (hostName.length()==0))
-    {
-      hostName=DEFAULT_HOST;
-    }
-    url=url.replace("${DB_NAME}",dbName);
-    url=url.replace("${HOST_NAME}",hostName);
-    Connection c=DriverManager.getConnection(url,user,password);
-    return c;
-  }
-
-  private void closeConnection(Connection c)
-  {
-    if (c!=null)
-    {
-      try
-      {
-        if (!c.isClosed())
-        {
-          c.close();
-        }
-      }
-      catch (SQLException e)
-      {
-        e.printStackTrace();
-      }
-    }
   }
 
   private void executeSQL(Connection c, String sql) throws SQLException
