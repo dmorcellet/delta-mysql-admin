@@ -8,6 +8,7 @@ import delta.common.utils.system.externalCommands.ExternalCommand;
 import delta.common.utils.text.TextUtils;
 
 /**
+ * Execute a SQL script on a target database.
  * @author DAM
  */
 public class MySqlCommandLine
@@ -17,6 +18,11 @@ public class MySqlCommandLine
     return "mysql";
   }
 
+  /**
+   * Execute the given script file on the given target database. 
+   * @param target Target database info.
+   * @param script Script file.
+   */
   public void executeScript(MySqlTargetDbInfo target, String script)
   {
     ExternalCommand cmd=buildCommand(target);
@@ -67,6 +73,10 @@ public class MySqlCommandLine
     return ret;
   }
 
+  /**
+   * Main method for test.
+   * @param args Not used.
+   */
   public static void main(String[] args)
   {
     File inFile=new File("/home/dm/genea.sql");
